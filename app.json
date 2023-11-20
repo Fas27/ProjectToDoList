@@ -1,0 +1,29 @@
+{
+  "name": "TodoList",
+  "version": "1.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "eject": "expo eject"
+  },
+  "dependencies": {
+    "expo": "^42.0.0",
+    "react": "~17.0.1",
+    "react-dom": "react-native-web",
+    "react-native": "~0.63.4",
+    "@react-navigation/native": "^6.0.4",
+    "@react-navigation/stack": "^6.0.10",
+    "@react-native-async-storage/async-storage": "^1.15.5"
+    
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0"
+    
+  },
+  "private": true
+}
+
+
