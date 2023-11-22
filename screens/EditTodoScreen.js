@@ -1,60 +1,72 @@
 // EditTodoScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import * as SQLite from 'expo-sqlite';
 
-const EditTodoScreen = ({ route, navigation }) => {
+const db = SQLite.openDatabase('todoList.db');
+
+const EditTodoScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
   const { taskId } = route.params;
   const [task, setTask] = useState('');
 
   useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        const storedTasks = await AsyncStorage.getItem('tasks');
-        if (storedTasks) {
-          const parsedTasks = JSON.parse(storedTasks);
-          const selectedTask = parsedTasks.find((t) => t.id === taskId);
-          if (selectedTask) {
-            setTask(selectedTask.task);
+    // Fetch the task details when the component mounts
+    fetchTaskDetails();
+  }, []);
+
+  const fetchTaskDetails = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM tasks WHERE id = ?',
+        [taskId],
+        (_, { rows: { _array } }) => {
+          if (_array.length > 0) {
+            setTask(_array[0].task);
           }
+        },
+        (_, error) => {
+          console.error(error);
         }
-      } catch (error) {
-        console.error('Error fetching task:', error);
-      }
-    };
+      );
+    });
+  };
 
-    fetchTask();
-  }, [taskId]);
-
-  const handleEditTask = async () => {
-    try {
-      const storedTasks = await AsyncStorage.getItem('tasks');
-      if (storedTasks) {
-        const parsedTasks = JSON.parse(storedTasks);
-        const updatedTasks = parsedTasks.map((t) =>
-          t.id === taskId ? { ...t, task } : t
-        );
-        setTask('');
-        await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
-        navigation.navigate('Todo List');
-      }
-    } catch (error) {
-      console.error('Error editing task:', error);
-    }
+  const handleUpdateTask = () => {
+    // Update the task in the database
+    db.transaction((tx) => {
+      tx.executeSql(
+        'UPDATE tasks SET task = ? WHERE id = ?',
+        [task, taskId],
+        (_, { rowsAffected }) => {
+          if (rowsAffected > 0) {
+            // If the task is successfully updated, navigate back to the TodoList screen
+            navigation.goBack();
+          }
+        },
+        (_, error) => {
+          console.error(error);
+        }
+      );
+    });
   };
 
   return (
     <View>
-      <Text>Edit Todo</Text>
+      <Text>Edit Todo Screen</Text>
       <TextInput
-        placeholder="Edit task"
         value={task}
         onChangeText={(text) => setTask(text)}
+        placeholder="Edit your task"
+        style={{ borderBottomWidth: 1, marginBottom: 10 }}
       />
-      <Button title="Save Changes" onPress={handleEditTask} />
+      <Button onPress={handleUpdateTask} title="Update Task" />
     </View>
   );
 };
 
 export default EditTodoScreen;
+
 
